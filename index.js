@@ -8,7 +8,8 @@ const passport=require('passport');
 const errorHandler = require('./errorHandlers/errorHandlers');
 var flash = require('connect-flash');
 
-const userRouter=require('./routes/users')
+const userRouter=require('./routes/users');
+const mailRouter = require('./routes/mailer');
 
 require('./auth/authenticate');
 require('dotenv').config();
@@ -42,6 +43,7 @@ app.use(bodyParser.json({ extended: false }))
 
 // app.use('/',homeRouter)
 app.use('/auth',userRouter);
+app.use('/mail',mailRouter);
 app.use('/',express.static(__dirname + "/static"));
 
 // app.use(errorHandler.notFound);
