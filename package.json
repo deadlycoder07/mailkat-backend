@@ -1,0 +1,23 @@
+{
+  "name": "mailkat",
+  "version": "1.0.0",
+  "description": "application to send scheduled mails and run campaigns",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/deadlycoder07/mailkat-backend.git"
+  },
+  "author": "Ramiz Mollah | Abha jha | abhinav krishna | rishav rajkumar",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/deadlycoder07/mailkat-backend/issues"
+  },
+  "homepage": "https://github.com/deadlycoder07/mailkat-backend#readme",
+  "dependencies": {
+    "express": "^4.17.1"
+  }
+}
