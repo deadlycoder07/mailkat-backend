@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <a href="/auth/google">Google Login</a>
+    <form id="reg_form">
+        <label for="username">Username</label>
+        <input type="text" name="username" id="username">
+        <label for="username">Password</label>
+        <input type="text" name="password" id="password">
+
+        <button type="submit" id="submit">SignUp</button>
+    </form>
+    <form id="login_form">
+        <label for="username">Username</label>
+        <input type="text" name="username" id="login_username">
+        <label for="username">Password</label>
+        <input type="text" name="password" id="login_password">
+
+        <button type="submit" id="submit">Login</button>
+    </form>
+
+    <script>
+        var reg_form=document.getElementById("reg_form");
+        reg_form.addEventListener('submit',async (e)=>{
+            e.preventDefault()
+
+            var username=document.getElementById("username").value;
+            var password=document.getElementById("password").value;
+            console.log(username,password)
+
+            res=await fetch('/auth/signup',{
+                method:'POST',
+                headers:{
+                    'Content-Type':'application/json'
+                },
+                body:JSON.stringify({
+                    username,
+                    password
+                })
+            })
+        })
+
+        var login_form=document.getElementById("login_form");
+        login_form.addEventListener('submit',async (e)=>{
+            e.preventDefault()
+
+            var username=document.getElementById("login_username").value;
+            var password=document.getElementById("login_password").value;
+            console.log(username,password)
+
+            res=await fetch('/auth/login/',{
+                method:'POST',
+                headers:{
+                    'Content-Type':'application/json'
+                },
+                body:JSON.stringify({
+                    username,
+                    password
+                })
+            })
+            console.log(res.message);
+        })
+    </script>
+</body>
+</html>
