@@ -1,5 +1,4 @@
 var mongoose = require('mongoose');
-const emailDetails = require('./emailDetails');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
@@ -30,11 +29,7 @@ var UserSchema = new Schema({
         },
     ],
     googleId: String,
-    email: String,
-    clients: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: emailDetails
-    }
+    email: String
 });
 
 UserSchema.methods.toJSON = function () {

@@ -1,5 +1,6 @@
 var mongoose = require('mongoose');
 var {Schema}=mongoose;
+const users = require('./users')
 
 var emailSchema= new Schema({
     campaignName:{
@@ -14,7 +15,11 @@ var emailSchema= new Schema({
         }
     ],
     cc:[{type:String}],
-    bcc:[{type:String}]
+    bcc:[{type:String}],
+    userDetails:{
+        type:mongoose.Schema.Types.ObjectId,
+        ref:users
+    },
 });
 
 module.exports=mongoose.model('EmailDetails',emailSchema);
