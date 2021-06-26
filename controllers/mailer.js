@@ -73,7 +73,7 @@ exports.sendEmail = async(req, res, next)=>{
     else if(recurrence==="Once") //problematic
     {
         console.log("Printing once")
-        const date = new Date(2021, 05, 27, 3, 35, 0);
+        const date = new Date(2021, 05, 27, 4, 45, 0);
         try {
             const job = schedule.scheduleJob(date, async function(){
                 console.log("sending at 20:20!");
@@ -85,13 +85,12 @@ exports.sendEmail = async(req, res, next)=>{
                                 subject, body, campaignDetails:campaignId, userDetails:user._id, sent:true, lastSent:new Date()
                             })
                             console.log("added to log", newLog)
-                            res.status(200);
-                            res.json({"message":"mail sent"});
                             console.log('Email sent: ' + info.response);
                         }
                     }
                 )
-            })
+            });
+            res.status(200).send({"message": "mail scheduled"});
         }
         catch (error) {
             console.log(error);
