@@ -7,19 +7,14 @@ const emailLogs = require('../models/emailLogs');
 const users = require('../models/users');
 const parser = require('cron-parser');
 const schedule = require('node-schedule');
+const auth = require('../middlewares/auth');
 
 require('dotenv');
 
 const url_taskMap = {};
 
 mailRouter.route('/send')
-.post(async(req, res, next)=>{
-    if(!req.user)
-    {
-        res.status(401);
-        res.json({"message":"You need to login first!"})
-        return res;
-    }
+.post(auth, async(req, res, next)=>{
     var {campaignName, subject, body, second='*', minute='*', hour='*', dayOfMonth='*', month='*', dayOfWeek='*', recurrence=null}=req.body;
     console.log(recurrence, second, minute, hour, month, dayOfMonth, dayOfWeek, to, cc, bcc);
     var campaign = await emailDetails.findOne({campaignName})
@@ -165,7 +160,7 @@ mailRouter.route('/send')
 })
 
 mailRouter.route('/stopSchedule')
-.get(async(req,res,next)=>{
+.get(auth, async(req,res,next)=>{
     const {taskNumber}=req.query
     console.log(taskNumber,url_taskMap[taskNumber])
     url_taskMap[taskNumber].stop();
@@ -180,13 +175,7 @@ mailRouter.route('/stopSchedule')
 })
 
 mailRouter.route('/history')
-.get(async(req,res,next)=>{
-    if(!req.user)
-    {
-        res.status(401);
-        res.json({"message":"You need to login first!"})
-        return res;
-    }
+.get(auth, async(req,res,next)=>{
     try{
         var user=await users.findOne(req.user)
         // console.log(user);
@@ -215,7 +204,7 @@ mailRouter.route('/history')
 })
 
 mailRouter.route('/scheduled')
-.get(async(req,res,next)=>{
+.get(auth, async(req,res,next)=>{
     if(!req.user)
     {
         res.status(401);
@@ -254,13 +243,7 @@ mailRouter.route('/scheduled')
 })
 
 mailRouter.route('/campaign')
-.post(async(req,res,next)=>{
-    if(!req.user)
-    {
-        res.status(401);
-        res.json({"message":"You need to login first!"})
-        return res;
-    }
+.post(auth, async(req,res,next)=>{
     // console.log(req.body)
     var {campaignName, to, cc, bcc}=req.body;
     console.log(to,campaignName, cc, bcc);
@@ -291,13 +274,7 @@ mailRouter.route('/campaign')
 })
 
 mailRouter.route('/campaign')
-.get(async(req,res,next)=>{
-    if(!req.user)
-    {
-        res.status(401);
-        res.json({"message":"You need to login first!"})
-        return res;
-    }
+.get(auth, async(req,res,next)=>{
     user=await users.findOne(req.user)
     console.log(user)
     try {
@@ -321,13 +298,7 @@ mailRouter.route('/campaign')
 })
 
 mailRouter.route('/campaignNames')
-.get(async(req,res,next)=>{
-    if(!req.user)
-    {
-        res.status(401);
-        res.json({"message":"You need to login first!"})
-        return res;
-    }
+.get(auth, async(req,res,next)=>{
     user=await users.findOne(req.user)
     try {
         allCampaigns=await emailDetails.find({userDetails:user._id});
