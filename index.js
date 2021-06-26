@@ -34,10 +34,10 @@ app.use(cookieSession({
 app.use(passport.initialize())
 app.use(passport.session())
 app.use(flash());
-
+app.use(cors());
 app.use((req, res, next) => {
     // Website you wish to allow to connect
-    res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3000');
+    res.setHeader('Access-Control-Allow-Origin', '*');
   
     // Request methods you wish to allow
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
@@ -55,10 +55,10 @@ app.use((req, res, next) => {
 
 app.use(bodyParser.json({ extended: false }))
 
-// app.use('/',homeRouter)
+//app.use('/',homeRouter)
 app.use('/auth',userRouter);
 app.use('/mail',mailRouter);
-// app.use('/',express.static(__dirname + "/static"));
+app.use('/',express.static(__dirname + "/static"));
 
 // app.use(errorHandler.notFound);
 // app.use(errorHandler.errorHandler);
