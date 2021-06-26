@@ -11,17 +11,21 @@ const schedule = require('node-schedule');
 const url_taskMap = {};
 
 exports.sendEmail = async(req, res, next)=>{
-    if(!req.user)
-    {
-        res.status(401);
-        res.json({"message":"You need to login first!"})
-        return res;
-    }
-    var {campaignName, subject, body, second='*', minute='*', hour='*', dayOfMonth='*', month='*', dayOfWeek='*', recurrence=null}=req.body;
-    console.log(recurrence, second, minute, hour, month, dayOfMonth, dayOfWeek);
-    var campaign = await emailDetails.findOne({campaignName})
+    var {campaignName=null, subject, body, second='*', minute='*', hour='*', dayOfMonth='*', month='*', dayOfWeek='*', recurrence=null, to, cc, bcc}=req.body;
 
-    console.log(campaign.to, campaign.bcc, campaign.cc);
+    console.log(recurrence, second, minute, hour, month, dayOfMonth, dayOfWeek, to ,cc ,bcc, campaignName)
+
+    if(campaignName!==null)
+    {
+        var campaign = await emailDetails.findOne({campaignName})
+        console.log(campaign)
+        campaignId=campaign._id
+        var {to,bcc,cc}=campaign;
+    }
+    else
+    {
+        campaignId=null      
+    }
 
     var transporter = nodemailer.createTransport({
     // host: 'mail.weblikate.com',
@@ -34,9 +38,9 @@ exports.sendEmail = async(req, res, next)=>{
     
     var mailOptions = {
         from: process.env.auth_emailid,
-        to:campaign.to,
-        cc:campaign.cc,
-        bcc:campaign.bcc,
+        to,
+        cc,
+        bcc,
         subject: subject,
         html: body
     };
@@ -53,7 +57,7 @@ exports.sendEmail = async(req, res, next)=>{
             } else {
                 try {
                     newLog=await emailLogs.create({
-                        subject, body, campaignDetails:campaign._id, userDetails:user._id, sent:true, lastSent:new Date()
+                        subject, body, campaignDetails:campaignId, userDetails:user._id, sent:true, lastSent:new Date()
                     })
                     console.log("added to log", newLog)
                     res.status(200);
@@ -69,7 +73,7 @@ exports.sendEmail = async(req, res, next)=>{
     else if(recurrence==="Once") //problematic
     {
         console.log("Printing once")
-        const date = new Date(2021, 0, 27, 4, 05, 0);
+        const date = new Date(2021, 05, 27, 3, 35, 0);
         try {
             const job = schedule.scheduleJob(date, async function(){
                 console.log("sending at 20:20!");
@@ -78,7 +82,7 @@ exports.sendEmail = async(req, res, next)=>{
                         console.log(error);
                     } else {
                             newLog=await emailLogs.create({
-                                subject, body, campaignDetails:campaign._id, userDetails:user._id, sent:true, lastSent:new Date()
+                                subject, body, campaignDetails:campaignId, userDetails:user._id, sent:true, lastSent:new Date()
                             })
                             console.log("added to log", newLog)
                             res.status(200);
@@ -115,7 +119,7 @@ exports.sendEmail = async(req, res, next)=>{
             
                 foundLog=await emailLogs.findOne({
                     recurrence, subject, body, second, minute, hour, dayOfMonth, month, month, dayOfWeek, 
-                    campaignDetails:campaign._id, userDetails:user._id, sent:true
+                    campaignDetails:campaignId, userDetails:user._id, sent:true
                 })
                 console.log(foundLog);
                 if(foundLog===null)
@@ -124,7 +128,7 @@ exports.sendEmail = async(req, res, next)=>{
 
                     newLog=await emailLogs.create({
                         recurrence, subject, body, second, minute, hour, dayOfMonth, month, month, dayOfWeek, 
-                        campaignDetails:campaign._id, userDetails:user._id, sent:true, lastSent:new Date(), nextScheduleTime
+                        campaignDetails:campaignId, userDetails:user._id, sent:true, lastSent:new Date(), nextScheduleTime
                     })
                     console.log(newLog);
                 }
@@ -133,7 +137,7 @@ exports.sendEmail = async(req, res, next)=>{
                     console.log("updating");
                     updatedLog=await emailLogs.findOneAndUpdate({
                         recurrence, subject, body, second, minute, hour, dayOfMonth, month, month, dayOfWeek, 
-                        campaignDetails:campaign._id, userDetails:user._id, sent:true
+                        campaignDetails:campaignId, userDetails:user._id, sent:true
                     },{
                         lastSent:new Date(),
                         nextScheduleTime
@@ -152,7 +156,7 @@ exports.sendEmail = async(req, res, next)=>{
 
         updatedLog=await emailLogs.findOneAndUpdate({
             recurrence, subject, body, second, minute, hour, dayOfMonth, month, month, dayOfWeek, 
-            campaignDetails:campaign._id, userDetails:user._id, sent:true
+            campaignDetails:campaignId, userDetails:user._id, sent:true
         },{
             task_id:idx
         })
@@ -161,35 +165,35 @@ exports.sendEmail = async(req, res, next)=>{
     }
 };
 
-exports.stopSchedule = async (req, res, next) => {
-    const { taskNumber } = req.query
-    console.log(taskNumber, url_taskMap[taskNumber])
+exports.stopSchedule = async(req,res,next)=>{
+    const {taskNumber}=req.query
+    console.log(taskNumber,url_taskMap[taskNumber])
     url_taskMap[taskNumber].stop();
     try {
-        updatedLog = await emailLogs.findOneAndUpdate({ task_id: taskNumber }, { recurrence: null })
-        console.log("after stop", updatedLog)
+        updatedLog=await emailLogs.findOneAndUpdate({task_id:taskNumber},{recurrence:null})
+        console.log("after stop",updatedLog)
         res.status(200);
-        res.json({ "message": `Task ${taskNumber} successfully terminated` });
+        res.json({"message":`Task ${taskNumber} successfully terminated`});   
     } catch (error) {
         console.log(error)
     }
 };
 
-exports.mailHistory = async (req, res, next) => {
-    try {
-        var user = await users.findOne(req.user)
+exports.mailHistory = async(req,res,next)=>{
+    try{
+        var user=await users.findOne(req.user)
         // console.log(user);
-        var logs = await emailLogs.find({ userDetails: user._id, sent: true }).populate('campaignDetails').populate('userDetails')
+        var logs= await emailLogs.find({userDetails:user._id, sent:true}).populate('campaignDetails').populate('userDetails')
         // console.log(logs)
-        history = logs.map(log => {
+        history=logs.map(log=>{
             return ({
                 recurrence: log.recurrence,
                 subject: log.subject,
                 to: log.campaignDetails.to,
                 cc: log.campaignDetails.cc,
                 bcc: log.campaignDetails.bcc,
-                campaignName: log.campaignDetails.campaignName,
-                lastSent: log.lastSent
+                campaignName:log.campaignDetails.campaignName,
+                lastSent:log.lastSent
             })
         })
         console.log("response", history)
@@ -197,84 +201,97 @@ exports.mailHistory = async (req, res, next) => {
         res.send(history)
         return res;
     }
-    catch (error) {
+    catch(error)
+    {
         console.log(error);
     }
 };
 
-exports.mailScheduled = async (req, res, next) => {
-    try {
-        var user = await users.findOne(req.user)
+exports.mailScheduled = async(req,res,next)=>{
+    try{
+        var user=await users.findOne(req.user)
         // console.log(user);
 
-        var logs = await emailLogs.find({
-            userDetails: user._id,
-            recurrence: { $ne: null }
+        var logs= await emailLogs.find({
+            userDetails:user._id, 
+            recurrence:{$ne:null}
         }).populate('campaignDetails').populate('userDetails')
         console.log(logs)
 
-        history = logs.map(log => {
+        history=logs.map(log=>{
             return ({
                 recurrence: log.recurrence,
                 subject: log.subject,
                 to: log.campaignDetails.to,
                 cc: log.campaignDetails.cc,
                 bcc: log.campaignDetails.bcc,
-                campaignName: log.campaignDetails.campaignName,
-                nextMailTime: log.nextScheduleTime
+                campaignName:log.campaignDetails.campaignName,
+                nextMailTime:log.nextScheduleTime
             })
         })
         res.status(200)
         res.send(history)
         return res;
     }
-    catch (error) {
+    catch(error)
+    {
         console.log(error);
     }
 };
 
-exports.creatCampaign = async (req, res, next) => {
+exports.creatCampaign = async(req,res,next)=>{
     // console.log(req.body)
-    var { campaignName, to, cc, bcc } = req.body;
-    console.log(to, campaignName, cc, bcc);
+    var {campaignName, to, cc, bcc}=req.body;
+    console.log(to,campaignName, cc, bcc);
 
-    user = await users.findOne(req.user)
-    console.log("user", user)
+    user=await users.findOne(req.user)
+    console.log("user",user)
     try {
-        newCampaign = await emailDetails.create({
+        foundCampaign=await emailDetails.find({
             campaignName,
-            userDetails: user._id
+            userDetails:user._id
+        });
+
+        if(foundCampaign)
+        {
+            res.status(402)
+            res.json({"message":""})
+        }
+
+        newCampaign=await emailDetails.create({
+            campaignName,
+            userDetails:user._id
         });
         console.log(newCampaign)
-        var camp = await emailDetails.updateOne({ _id: newCampaign._id }, {
+        var camp=await emailDetails.updateOne({_id:newCampaign._id},{
             $push: {
-                to: { $each: to },
+                to: { $each: to},
                 cc: { $each: cc },
                 bcc: { $each: bcc }
             }
         })
         res.status(201);
-        res.json({ "message": "Campaign created!" });
+        res.json({"message":"Campaign created!"});
         return res;
-
+        
     } catch (error) {
         console.log(error);
         next();
     }
 };
 
-exports.getallCampaign = async (req, res, next) => {
-    user = await users.findOne(req.user)
+exports.getallCampaign = async(req,res,next)=>{
+    user=await users.findOne(req.user)
     console.log(user)
     try {
-        allCampaigns = await emailDetails.find({ userDetails: user._id }).populate('userDetails');
+        allCampaigns=await emailDetails.find({userDetails:user._id}).populate('userDetails');
         console.log(allCampaigns)
-        campaignDetails = allCampaigns.map(campaign => {
-            return {
-                campaignName: campaign.campaignName,
-                to: campaign.to,
-                cc: campaign.cc,
-                bcc: campaign.bcc
+        campaignDetails=allCampaigns.map(campaign=>{
+            return{
+                campaignName:campaign.campaignName,
+                to:campaign.to,
+                cc:campaign.cc,
+                bcc:campaign.bcc
             }
         })
         res.status(200);

@@ -15,5 +15,4 @@ mailRouter.post('/campaign',auth,mailController.creatCampaign);
 mailRouter.get('/campaign',auth,mailController.getallCampaign);
 mailRouter.get('/campaignNames',auth,mailController.userCampaign);
 
-
 module.exports = mailRouter;
