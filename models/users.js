@@ -16,6 +16,13 @@ var UserSchema= new Schema({
         type:String,
         default:''
     },
+    emailVerified:{
+        type:Boolean
+    },
+    Tokens:{
+        accessToken:String,
+        refreshToken:String
+    },
     googleId:String,
     email: String,
     clients: {
