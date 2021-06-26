@@ -2,37 +2,11 @@ const express= require('express')
 const Users= require('../models/users');
 const userRouter= express.Router();
 const passport= require('passport')
-
-userRouter.route('/signup')
-.post(async(req, res, next)=>{
-    // console.log(req.body);
-    var {username, password, email}=req.body;
-    user=await Users.findOne({$or:[{username},{email:email}]});
-    if(user!==null)
-    {
-        console.log("Already exists");
-        res.setHeader("Content-Type","application/json");
-        res.status(400);
-        res.json({"message":"User with that username or email already exists!!"});
-        return res;
-    }
-    newUser=await Users.create({
-        username,
-        password,
-        email
-    })
-    console.log(newUser);
-
-    res.setHeader("Content-Type","application/json");
-    res.status(200);
-    res.json({message:"Successfully Signed Up!"});
-})
-
-userRouter.post('/login', passport.authenticate('local'),(req,res,next)=>{
-    res.status(200)
-    res.json({"message":"successful login"});
-    return res;
-});
+const userController = require('../controllers/user');
+//signup
+userRouter.post('signup',userController.signUp);
+//login
+userRouter.post('/login', userController.loginUser);
 
 userRouter.get('/google',passport.authenticate('google',{scope:['profile','email']
 }));
