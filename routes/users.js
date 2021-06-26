@@ -13,7 +13,7 @@ userRouter.route('/signup')
         console.log("Already exists");
         res.setHeader("Content-Type","application/json");
         res.status(400);
-        res.json("User with that username or email already exists!!");
+        res.json({"message":"User with that username or email already exists!!"});
         return res;
     }
     newUser=await Users.create({
