@@ -15,11 +15,21 @@ const url_taskMap = {};
 
 mailRouter.route('/send')
 .post(auth, async(req, res, next)=>{
-    var {campaignName, subject, body, second='*', minute='*', hour='*', dayOfMonth='*', month='*', dayOfWeek='*', recurrence=null}=req.body;
-    console.log(recurrence, second, minute, hour, month, dayOfMonth, dayOfWeek, to, cc, bcc);
-    var campaign = await emailDetails.findOne({campaignName})
+    var {campaignName=null, subject, body, second='*', minute='*', hour='*', dayOfMonth='*', month='*', dayOfWeek='*', recurrence=null, to, cc, bcc}=req.body;
 
-    console.log(campaign.to, campaign.bcc, campaign.cc);
+    console.log(recurrence, second, minute, hour, month, dayOfMonth, dayOfWeek, to ,cc ,bcc, campaignName)
+
+    if(campaignName!==null)
+    {
+        var campaign = await emailDetails.findOne({campaignName})
+        console.log(campaign)
+        campaignId=campaign._id
+        var {to,bcc,cc}=campaign;
+    }
+    else
+    {
+        campaignId=null      
+    }
 
     var transporter = nodemailer.createTransport({
     // host: 'mail.weblikate.com',
@@ -32,9 +42,9 @@ mailRouter.route('/send')
     
     var mailOptions = {
         from: process.env.auth_emailid,
-        to:campaign.to,
-        cc:campaign.cc,
-        bcc:campaign.bcc,
+        to,
+        cc,
+        bcc,
         subject: subject,
         html: body
     };
@@ -51,7 +61,7 @@ mailRouter.route('/send')
             } else {
                 try {
                     newLog=await emailLogs.create({
-                        subject, body, campaignDetails:campaign._id, userDetails:user._id, sent:true, lastSent:new Date()
+                        subject, body, campaignDetails:campaignId, userDetails:user._id, sent:true, lastSent:new Date()
                     })
                     console.log("added to log", newLog)
                     res.status(200);
@@ -67,7 +77,7 @@ mailRouter.route('/send')
     else if(recurrence==="Once") //problematic
     {
         console.log("Printing once")
-        const date = new Date(2021, 05, 26, 20, 38, 0);
+        const date = new Date(2021, 05, 27, 3, 35, 0);
         try {
             const job = schedule.scheduleJob(date, async function(){
                 console.log("sending at 20:20!");
@@ -76,7 +86,7 @@ mailRouter.route('/send')
                         console.log(error);
                     } else {
                             newLog=await emailLogs.create({
-                                subject, body, campaignDetails:campaign._id, userDetails:user._id, sent:true, lastSent:new Date()
+                                subject, body, campaignDetails:campaignId, userDetails:user._id, sent:true, lastSent:new Date()
                             })
                             console.log("added to log", newLog)
                             res.status(200);
@@ -113,7 +123,7 @@ mailRouter.route('/send')
             
                 foundLog=await emailLogs.findOne({
                     recurrence, subject, body, second, minute, hour, dayOfMonth, month, month, dayOfWeek, 
-                    campaignDetails:campaign._id, userDetails:user._id, sent:true
+                    campaignDetails:campaignId, userDetails:user._id, sent:true
                 })
                 console.log(foundLog);
                 if(foundLog===null)
@@ -122,7 +132,7 @@ mailRouter.route('/send')
 
                     newLog=await emailLogs.create({
                         recurrence, subject, body, second, minute, hour, dayOfMonth, month, month, dayOfWeek, 
-                        campaignDetails:campaign._id, userDetails:user._id, sent:true, lastSent:new Date(), nextScheduleTime
+                        campaignDetails:campaignId, userDetails:user._id, sent:true, lastSent:new Date(), nextScheduleTime
                     })
                     console.log(newLog);
                 }
@@ -131,7 +141,7 @@ mailRouter.route('/send')
                     console.log("updating");
                     updatedLog=await emailLogs.findOneAndUpdate({
                         recurrence, subject, body, second, minute, hour, dayOfMonth, month, month, dayOfWeek, 
-                        campaignDetails:campaign._id, userDetails:user._id, sent:true
+                        campaignDetails:campaignId, userDetails:user._id, sent:true
                     },{
                         lastSent:new Date(),
                         nextScheduleTime
@@ -150,7 +160,7 @@ mailRouter.route('/send')
 
         updatedLog=await emailLogs.findOneAndUpdate({
             recurrence, subject, body, second, minute, hour, dayOfMonth, month, month, dayOfWeek, 
-            campaignDetails:campaign._id, userDetails:user._id, sent:true
+            campaignDetails:campaignId, userDetails:user._id, sent:true
         },{
             task_id:idx
         })
@@ -245,6 +255,17 @@ mailRouter.route('/campaign')
     user=await users.findOne(req.user)
     console.log("user",user)
     try {
+        foundCampaign=await emailDetails.find({
+            campaignName,
+            userDetails:user._id
+        });
+
+        if(foundCampaign)
+        {
+            res.status(402)
+            res.json({"message":""})
+        }
+
         newCampaign=await emailDetails.create({
             campaignName,
             userDetails:user._id
