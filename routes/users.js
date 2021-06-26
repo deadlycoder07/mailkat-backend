@@ -30,7 +30,7 @@ userRouter.route('/signup')
 
 userRouter.post('/login', passport.authenticate('local'),(req,res,next)=>{
     res.status(200)
-    res.send("successful login");
+    res.json({"message":"successful login"});
     return res;
 });
 
@@ -43,14 +43,14 @@ userRouter.route('/logout')
     {
         req.logout();
         res.status(200)
-        res.send("Successfully Logged Out!")
+        res.json({"message":"Successfully Logged Out!"})
         return res;
     }
     else
     {
         console.log("User not logged in")
         res.status(400)
-        res.send("You are not logged in!")
+        res.json({"message":"You are not logged in!"})
     }
 });
 
