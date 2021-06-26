@@ -21,7 +21,7 @@ mailRouter.route('/send')
         return res;
     }
     var {campaignName, subject, body, second='*', minute='*', hour='*', dayOfMonth='*', month='*', dayOfWeek='*', recurrence=null}=req.body;
-    console.log(recurrence, second, minute, hour, month, dayOfMonth, dayOfWeek);
+    console.log(recurrence, second, minute, hour, month, dayOfMonth, dayOfWeek, to, cc, bcc);
     var campaign = await emailDetails.findOne({campaignName})
 
     console.log(campaign.to, campaign.bcc, campaign.cc);
@@ -264,10 +264,15 @@ mailRouter.route('/campaign')
     // console.log(req.body)
     var {campaignName, to, cc, bcc}=req.body;
     console.log(to,campaignName, cc, bcc);
+
+    user=await users.findOne(req.user)
+    console.log("user",user)
     try {
         newCampaign=await emailDetails.create({
             campaignName,
+            userDetails:user._id
         });
+        console.log(newCampaign)
         var camp=await emailDetails.updateOne({_id:newCampaign._id},{
             $push: {
                 to: { $each: to},
@@ -293,11 +298,43 @@ mailRouter.route('/campaign')
         res.json({"message":"You need to login first!"})
         return res;
     }
-    user=await user.findOne({userDetails:user})
+    user=await users.findOne(req.user)
+    console.log(user)
+    try {
+        allCampaigns=await emailDetails.find({userDetails:user._id}).populate('userDetails');
+        console.log(allCampaigns)
+        campaignDetails=allCampaigns.map(campaign=>{
+            return{
+                campaignName:campaign.campaignName,
+                to:campaign.to,
+                cc:campaign.cc,
+                bcc:campaign.bcc
+            }
+        })
+        res.status(200);
+        res.send(campaignDetails);
+        return res;
+    } catch (error) {
+        console.log(error);
+        next();
+    }
+})
+
+mailRouter.route('/campaignNames')
+.get(async(req,res,next)=>{
+    if(!req.user)
+    {
+        res.status(401);
+        res.json({"message":"You need to login first!"})
+        return res;
+    }
+    user=await users.findOne(req.user)
     try {
         allCampaigns=await emailDetails.find({userDetails:user._id});
         res.status(200);
-        res.send(allCampaigns);
+        campaignNames=allCampaigns.map((campaign)=>campaign.campaignName)
+        res.send(campaignNames);
+        console.log(campaignNames);
         return res;
     } catch (error) {
         console.log(error);
