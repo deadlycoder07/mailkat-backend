@@ -99,7 +99,9 @@ mailRouter.route('/send')
     }
     else //recurring
     {
-        cron_schedule_string=`*/${second} ${minute} ${hour} ${dayOfMonth} ${month} ${dayOfWeek}`
+        if(recurrence==='Timely')
+        second='*/'+second;
+        cron_schedule_string=`${second} ${minute} ${hour} ${dayOfMonth} ${month} ${dayOfWeek}`
 
         const task=cron.schedule(cron_schedule_string,async()=>{
             transporter.sendMail(mailOptions, function(error, info){
@@ -168,7 +170,8 @@ mailRouter.route('/stopSchedule')
     console.log(taskNumber,url_taskMap[taskNumber])
     url_taskMap[taskNumber].stop();
     try {
-        await emailLogs.findOneAndUpdate({task_id:taskNumber},{recurrence:null})
+        updatedLog=await emailLogs.findOneAndUpdate({task_id:taskNumber},{recurrence:null})
+        console.log("after stop",updatedLog)
         res.status(200);
         res.json({"message":`Task ${taskNumber} successfully terminated`});   
     } catch (error) {
