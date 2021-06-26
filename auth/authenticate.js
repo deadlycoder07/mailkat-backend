@@ -40,7 +40,7 @@ passport.use(
         clientSecret:process.env.google_client_secret
 },(accessToken,refreshToken,profile,done)=>{
     console.log("profile:",profile._json.email)
-    User.findOne({googleId:profile.id})
+    User.findOne({email:profile._json.email})
     .then((user)=>{
         if(user===null)
         {
