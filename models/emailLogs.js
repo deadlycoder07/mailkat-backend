@@ -57,6 +57,9 @@ var emailLogs= new Schema({
     },
     nextScheduleTime:{
         type:Date,
+    },
+    task_id:{
+        type:Number
     }
 });
 

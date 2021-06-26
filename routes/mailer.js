@@ -6,15 +6,18 @@ const cron = require('node-cron');
 const emailLogs = require('../models/emailLogs');
 const users = require('../models/users');
 const parser = require('cron-parser');
+const schedule = require('node-schedule');
 
 require('dotenv');
+
+const url_taskMap = {};
 
 mailRouter.route('/send')
 .post(async(req, res, next)=>{
     if(!req.user)
     {
         res.status(401);
-        res.json("You need to login first!")
+        res.json({"message":"You need to login first!"})
         return res;
     }
     var {campaignName, subject, body, second='*', minute='*', hour='*', dayOfMonth='*', month='*', dayOfWeek='*', recurrence=null}=req.body;
@@ -57,7 +60,7 @@ mailRouter.route('/send')
                     })
                     console.log("added to log", newLog)
                     res.status(200);
-                    res.json({"status":"mail sent"});
+                    res.json({"message":"mail sent"});
                     console.log('Email sent: ' + info.response);
                 } catch (error) {
                     console.log(error);
@@ -66,17 +69,46 @@ mailRouter.route('/send')
             }
         });
     }
+    else if(recurrence==="Once") //problematic
+    {
+        console.log("Printing once")
+        const date = new Date(2021, 05, 26, 20, 38, 0);
+        try {
+            const job = schedule.scheduleJob(date, async function(){
+                console.log("sending at 20:20!");
+                transporter.sendMail(mailOptions, async function(error, info){
+                    if (error) {
+                        console.log(error);
+                    } else {
+                            newLog=await emailLogs.create({
+                                subject, body, campaignDetails:campaign._id, userDetails:user._id, sent:true, lastSent:new Date()
+                            })
+                            console.log("added to log", newLog)
+                            res.status(200);
+                            res.json({"message":"mail sent"});
+                            console.log('Email sent: ' + info.response);
+                        }
+                    }
+                )
+            })
+        }
+        catch (error) {
+            console.log(error);
+            next();
+        }
+    }
     else //recurring
     {
-        cron_schedule_string=`*/${second} ${minute} ${hour} ${dayOfMonth} ${month} ${dayOfWeek}`
+        if(recurrence==='Timely')
+        second='*/'+second;
+        cron_schedule_string=`${second} ${minute} ${hour} ${dayOfMonth} ${month} ${dayOfWeek}`
 
-        cron.schedule(cron_schedule_string,async()=>{
+        const task=cron.schedule(cron_schedule_string,async()=>{
             transporter.sendMail(mailOptions, function(error, info){
                 if (error) {
                     console.log(error);
                 } else {
                     res.status(200);
-                    res.json({"status":"mail sent"});
                     console.log('Email sent: ' + info.response);
                 }
             }); 
@@ -113,8 +145,37 @@ mailRouter.route('/send')
                 }
             } catch (error) {
                 console.log(error)
+                next();
             }
         })
+        const idx=Object.keys(url_taskMap).length
+        console.log(idx)
+        res.json({id:idx, "message":"mail sent"})
+        url_taskMap[idx] = task;
+
+        updatedLog=await emailLogs.findOneAndUpdate({
+            recurrence, subject, body, second, minute, hour, dayOfMonth, month, month, dayOfWeek, 
+            campaignDetails:campaign._id, userDetails:user._id, sent:true
+        },{
+            task_id:idx
+        })
+
+        console.log("map",url_taskMap)
+    }
+})
+
+mailRouter.route('/stopSchedule')
+.get(async(req,res,next)=>{
+    const {taskNumber}=req.query
+    console.log(taskNumber,url_taskMap[taskNumber])
+    url_taskMap[taskNumber].stop();
+    try {
+        updatedLog=await emailLogs.findOneAndUpdate({task_id:taskNumber},{recurrence:null})
+        console.log("after stop",updatedLog)
+        res.status(200);
+        res.json({"message":`Task ${taskNumber} successfully terminated`});   
+    } catch (error) {
+        console.log(error)
     }
 })
 
@@ -123,7 +184,7 @@ mailRouter.route('/history')
     if(!req.user)
     {
         res.status(401);
-        res.json("You need to login first!")
+        res.json({"message":"You need to login first!"})
         return res;
     }
     try{
@@ -158,7 +219,7 @@ mailRouter.route('/scheduled')
     if(!req.user)
     {
         res.status(401);
-        res.json("You need to login first!")
+        res.json({"message":"You need to login first!"})
         return res;
     }
     try{
@@ -197,7 +258,7 @@ mailRouter.route('/campaign')
     if(!req.user)
     {
         res.status(401);
-        res.json("You need to login first!")
+        res.json({"message":"You need to login first!"})
         return res;
     }
     // console.log(req.body)
@@ -215,9 +276,29 @@ mailRouter.route('/campaign')
             }
         })
         res.status(201);
-        res.send("Campaign created!");
+        res.json({"message":"Campaign created!"});
         return res;
         
+    } catch (error) {
+        console.log(error);
+        next();
+    }
+})
+
+mailRouter.route('/campaign')
+.get(async(req,res,next)=>{
+    if(!req.user)
+    {
+        res.status(401);
+        res.json({"message":"You need to login first!"})
+        return res;
+    }
+    user=await user.findOne({userDetails:user})
+    try {
+        allCampaigns=await emailDetails.find({userDetails:user._id});
+        res.status(200);
+        res.send(allCampaigns);
+        return res;
     } catch (error) {
         console.log(error);
         next();
