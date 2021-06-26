@@ -17,7 +17,7 @@ passport.deserializeUser((id,done)=>{
 
 passport.use(new LocalStrategy(
   function(username, password, done) {
-    User.findOne({ username: username }, function(err, user) {
+    User.findOne({$or:[ {username: username},{email:username} ]}, function(err, user) {
       if (err) { return done(err); }
       if (!user) {
         console.log("No user with that username")
