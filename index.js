@@ -44,7 +44,7 @@ app.use(bodyParser.json({ extended: false }))
 // app.use('/',homeRouter)
 app.use('/auth',userRouter);
 app.use('/mail',mailRouter);
-app.use('/',express.static(__dirname + "/static"));
+// app.use('/',express.static(__dirname + "/static"));
 
 // app.use(errorHandler.notFound);
 // app.use(errorHandler.errorHandler);

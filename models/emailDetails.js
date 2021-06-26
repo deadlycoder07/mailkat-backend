@@ -4,10 +4,17 @@ var {Schema}=mongoose;
 var emailSchema= new Schema({
     campaignName:{
         type:String,
-        required:true
+        required:true,
+        unique:true
     },
-    to:[{type:String}],
+    to:[
+        {
+            type:String,
+            required:true
+        }
+    ],
     cc:[{type:String}],
+    bcc:[{type:String}]
 });
 
 module.exports=mongoose.model('EmailDetails',emailSchema);
