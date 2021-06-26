@@ -194,6 +194,12 @@ mailRouter.route('/scheduled')
 
 mailRouter.route('/campaign')
 .post(async(req,res,next)=>{
+    if(!req.user)
+    {
+        res.status(401);
+        res.json("You need to login first!")
+        return res;
+    }
     // console.log(req.body)
     var {campaignName, to, cc, bcc}=req.body;
     console.log(to,campaignName, cc, bcc);
