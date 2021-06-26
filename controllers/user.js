@@ -30,6 +30,7 @@ exports.loginUser = async (req, res, next) => {
       const token = await user.generateAuthToken();
       var data = {
           _id: user._id,
+          message:"Successfully logged in!",
           name: user.name,
           username:user.username,
           email:user.email,
