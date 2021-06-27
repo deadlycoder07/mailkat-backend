@@ -44,6 +44,10 @@ var emailLogs= new Schema({
         type:mongoose.Schema.Types.ObjectId,
         ref:emailDetails
     },
+    emailDetails:{
+        type:mongoose.Schema.Types.ObjectId,
+        ref:emailDetails
+    },
     userDetails:{
         type:mongoose.Schema.Types.ObjectId,
         ref:users

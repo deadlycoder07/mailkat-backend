@@ -3,11 +3,6 @@ var {Schema}=mongoose;
 const users = require('./users')
 
 var emailSchema= new Schema({
-    campaignName:{
-        type:String,
-        required:true,
-        unique:true
-    },
     to:[
         {
             type:String,
