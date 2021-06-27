@@ -109,18 +109,17 @@ exports.sendEmail = async(req, res, next)=>{
                                 subject, body, campaignDetails:campaignId, emailDetails: emailDetailId, userDetails:user._id, nextScheduleTime : date
                             },{
                                 sent:true, 
-                                lastSent:new Date()
+                                lastSent:new Date(),
+                                nextScheduleTime:null
                             })
                             console.log("added to log", newLog)
-                            res.status(200);
-                            res.json({"message":"mail sent"});
                             console.log('Email sent: ' + info.response);
                         }
                     }
                 )
             })
             newLog=await emailLogs.create({
-                subject, body, campaignDetails:campaignId, emailDetails: emailDetailId, userDetails:user._id, nextScheduleTime:date
+                recurrence, subject, body, campaignDetails:campaignId, emailDetails: emailDetailId, userDetails:user._id, nextScheduleTime:date
             })
             res.status(200)
             res.json({"message":"Scheduled"})
@@ -184,7 +183,7 @@ exports.stopSchedule = async(req,res,next)=>{
     console.log(taskNumber,url_taskMap[taskNumber])
     url_taskMap[taskNumber].stop();
     try {
-        updatedLog=await emailLogs.findOneAndUpdate({task_id:taskNumber},{recurrence:null})
+        updatedLog=await emailLogs.findOneAndUpdate({task_id:taskNumber},{nextScheduleTime:null})
         console.log("after stop",updatedLog)
         res.status(200);
         res.json({"message":`Task ${taskNumber} successfully terminated`});   
@@ -231,8 +230,8 @@ exports.mailScheduled = async(req,res,next)=>{
         // console.log(user);
 
         var logs= await emailLogs.find({
-            userDetails:user._id, 
-            recurrence:{$ne:null}
+            userDetails:user._id,
+            nextScheduleTime:{$ne:null}
         }).populate('userDetails').populate('emailDetails').populate('campaignDetails')
         console.log(logs)
 
