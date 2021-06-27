@@ -230,7 +230,6 @@ exports.mailScheduled = async(req,res,next)=>{
             userDetails:user._id,
             nextScheduleTime:{$ne:null}
         }).populate('userDetails').populate('emailDetails').populate('campaignDetails')
-        console.log(logs)
 
         history=logs.map(log=>{
             history={
@@ -239,6 +238,7 @@ exports.mailScheduled = async(req,res,next)=>{
                 to: log.emailDetails.to,
                 cc: log.emailDetails.cc,
                 bcc: log.emailDetails.bcc,
+                task_id:log.task_id,
                 nextMailTime:log.nextScheduleTime
             }
             console.log(log.campaignDetails)
@@ -246,10 +246,6 @@ exports.mailScheduled = async(req,res,next)=>{
             {
                 console.log(log.campaignDetails)
                 history[campaignName]=log.campaignDetails.campaignName
-                if(log.campaignName.task_id!=undefined)
-                {
-                    history[task_id]=log.campaignName.task_id
-                }
             }
             return history
         })
@@ -352,19 +348,49 @@ exports.userCampaign  = async (req, res, next) => {
 exports.addEmail = async(req,res,next)=>{
     user=await users.findOne(req.user)
     var {campaignName, to, cc, bcc}=req.body;
+    console.log(to,cc,bcc);
     try {
-        updatedCampaign=await campaignDetails.findOneAndUpdate({
-            campaignName,
-            userDetails:user._id
+        campaign=await campaignDetails.findOne({campaignName, userDetails:user._id}).populate('userDetails').populate('emailDetails');
+        console.log(campaign)
+        updatedEmailDetails=await emailDetails.updateOne({
+            _id:campaign.emailDetails
         },{
-            $push:{
-                to:{$each:[to]},
-                cc:{$each:[cc]},
-                bcc:{$each:[bcc]},
+            $push : {
+                to : { $each : to},
+                cc : { $each : cc },
+                bcc : { $each : bcc},
             }
-        }).populate('emailDetails')
-        console.log(updatedCampaign)
-        res.send(updatedCampaign.emailDetails);
+        })
+
+        updatedCampaign=await campaignDetails.findOne({campaignName, userDetails:user._id}).populate('userDetails').populate('emailDetails');
+        console.log(updatedCampaign);
+        res.send(updatedCampaign);
+        res.status(200);
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+exports.deleteEmail = async(req,res,next)=>{
+    user=await users.findOne(req.user)
+    var {campaignName, to, cc, bcc}=req.body;
+    console.log(to,cc,bcc);
+    try {
+        campaign=await campaignDetails.findOne({campaignName, userDetails:user._id}).populate('userDetails').populate('emailDetails');
+        console.log(campaign)
+        updatedEmailDetails=await emailDetails.updateOne({
+            _id:campaign.emailDetails
+        },{
+            $pull : {
+                to : { $in : to},
+                cc : { $in : cc },
+                bcc : { $in : bcc},
+            }
+        })
+
+        updatedCampaign=await campaignDetails.findOne({campaignName, userDetails:user._id}).populate('userDetails').populate('emailDetails');
+        console.log(updatedCampaign);
+        res.send(updatedCampaign);
         res.status(200);
     } catch (error) {
         console.log(error);
