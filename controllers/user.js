@@ -47,7 +47,7 @@ exports.loginUser = async (req, res, next) => {
 exports.googleLogin = async (req ,res) => {
     try{
         var googleAccessToken = req.body.accessToken;
-        var googlerefreshToken = req.body.refreshToken;
+        var googleRefreshToken = req.body.refreshToken;
         const client = new OAuth2Client(process.env.CLIENT_ID);
         async function verify() {
           const ticket = await client.verifyIdToken({
@@ -58,10 +58,10 @@ exports.googleLogin = async (req ,res) => {
           const userid = payload['sub'];
 
           const user = await Users.findOne({email:payload['email']});
-          console.log(user.email);
           if(!user){
             var username= payload['email'];
             var email = payload['email'];
+            console.log(email);
             var googleId = userid;
             var name = payload['name'];
             newUser=await Users.create({
@@ -70,9 +70,9 @@ exports.googleLogin = async (req ,res) => {
                 name,
                 googleId,
                 googleAccessToken,
-                googlerefreshToken
+                googleRefreshToken
             })
-            var token = newUser.generateAuthToken();
+            var token = await newUser.generateAuthToken();
             var data = {
                 _id: newUser._id,
                 message:"Successfully logged in!",
@@ -85,7 +85,7 @@ exports.googleLogin = async (req ,res) => {
             res.status(200).send(data);
           }else{
             user.googleAccessToken = googleAccessToken;
-            user.googlerefreshToken = googlerefreshToken;
+            user.googleRefreshToken = googleRefreshToken;   
             const token = await user.generateAuthToken();
             var data = {
                 _id: user._id,
@@ -96,6 +96,7 @@ exports.googleLogin = async (req ,res) => {
                 token:token,
                 expiresIn: 36000,
             }
+            user.save();
             res.status(200).send(data);
           }
         }
