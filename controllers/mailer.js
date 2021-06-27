@@ -13,11 +13,8 @@ const url_taskMap = {};
 
 exports.sendEmail = async(req, res, next)=>{
     var {campaignName=null, subject, body, second='*', minute='*', hour='*', dayOfMonth='*', month='*', dayOfWeek='*',year=2021, recurrence=null, to, cc, bcc}=req.body;
-
     console.log(recurrence, second, minute, hour, month, dayOfMonth, dayOfWeek, to ,cc ,bcc, campaignName)
-
     user=await users.findOne(req.user);
-    console.log(user)
     if(campaignName!==null)
     {
         var campaign = await campaignDetails.findOne({campaignName, userDetails:user._id}).populate('emailDetails').populate('userDetails')
@@ -97,10 +94,10 @@ exports.sendEmail = async(req, res, next)=>{
     else if(recurrence==="Once") //problematic
     {
         console.log("Printing once")
-        const date = new Date(year, month, dayOfMonth, hour, minute, second);
+        const date = new Date(year, month, dayOfMonth, hour, minute, 0);
+        console.log(date.toString());
         try {
-            const job = schedule.scheduleJob(date, async function(){
-                console.log("sending at 20:20!");
+            const job = schedule.scheduleJob(date.toLocaleString(), async function(){
                 transporter.sendMail(mailOptions, async function(error, info){
                     if (error) {
                         console.log(error);

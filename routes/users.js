@@ -8,8 +8,7 @@ userRouter.post('/signup',userController.signUp);
 //login
 userRouter.post('/login', userController.loginUser);
 
-userRouter.get('/google',passport.authenticate('google',{scope:['profile','email']
-}));
+userRouter.post('/google',userController.googleLogin);
 
 userRouter.route('/logout')
 .get((req,res,next)=>{

@@ -1,5 +1,5 @@
 const Users = require("../models/users");
-
+const {OAuth2Client} = require('google-auth-library');
 exports.signUp = async(req, res, next)=>{
     // console.log(req.body);
     var {username, password, email}=req.body;
@@ -43,3 +43,65 @@ exports.loginUser = async (req, res, next) => {
         res.status(400).send(e);
     }
 };
+
+exports.googleLogin = async (req ,res) => {
+    try{
+        var googleAccessToken = req.body.accessToken;
+        var googlerefreshToken = req.body.refreshToken;
+        const client = new OAuth2Client(process.env.CLIENT_ID);
+        async function verify() {
+          const ticket = await client.verifyIdToken({
+              idToken: req.body.idToken,
+              audience: "407408718192.apps.googleusercontent.com"
+          });
+          const payload = ticket.getPayload();
+          const userid = payload['sub'];
+
+          const user = await Users.findOne({email:payload['email']});
+          console.log(user.email);
+          if(!user){
+            var username= payload['email'];
+            var email = payload['email'];
+            var googleId = userid;
+            var name = payload['name'];
+            newUser=await Users.create({
+                username,
+                email,
+                name,
+                googleId,
+                googleAccessToken,
+                googlerefreshToken
+            })
+            var token = newUser.generateAuthToken();
+            var data = {
+                _id: newUser._id,
+                message:"Successfully logged in!",
+                name: newUser.name,
+                username:newUser.username,
+                email:newUser.email,
+                token:token,
+                expiresIn: 36000,
+            }
+            res.status(200).send(data);
+          }else{
+            user.googleAccessToken = googleAccessToken;
+            user.googlerefreshToken = googlerefreshToken;
+            const token = await user.generateAuthToken();
+            var data = {
+                _id: user._id,
+                message:"Successfully logged in!",
+                name: user.name,
+                username:user.username,
+                email:user.email,
+                token:token,
+                expiresIn: 36000,
+            }
+            res.status(200).send(data);
+          }
+        }
+        verify().catch(console.error);
+    }catch(e){
+        console.log(e);
+        res.status(403).send({"message": "failed to login "})
+    }
+}

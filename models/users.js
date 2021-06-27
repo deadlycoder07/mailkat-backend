@@ -28,6 +28,8 @@ var UserSchema = new Schema({
             },
         },
     ],
+    googleAccessToken:String,
+    googleRefreshToken:String,
     googleId: String,
     email: String
 });
