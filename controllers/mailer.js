@@ -53,6 +53,7 @@ exports.sendEmail = async(req, res, next)=>{
 
 
     var transporter;
+    var mailOptions ;
     if (user.googleAccessToken) {
         transporter = nodemailer.createTransport({
             // host: 'mail.weblikate.com',
@@ -65,6 +66,14 @@ exports.sendEmail = async(req, res, next)=>{
                 accessToken: user.googleAccessToken
             }
         });
+        mailOptions = {
+            from: user.email,
+            to,
+            cc,
+            bcc,
+            subject: subject,
+            html: body
+        };
     } else {
         transporter =  nodemailer.createTransport({
             // host: 'mail.weblikate.com',
@@ -74,17 +83,16 @@ exports.sendEmail = async(req, res, next)=>{
                 pass: process.env.auth_password
             }
             });
+        mailOptions = {
+            from: process.env.auth_emailid,
+            to,
+            cc,
+            bcc,
+            subject: subject,
+            html: body
+        };
     }
-
     
-    var mailOptions = {
-        from: process.env.auth_emailid,
-        to,
-        cc,
-        bcc,
-        subject: subject,
-        html: body
-    };
 
     if(recurrence===null) //immediate mailing
     {
