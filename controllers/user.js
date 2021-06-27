@@ -52,7 +52,7 @@ exports.googleLogin = async (req ,res) => {
         async function verify() {
           const ticket = await client.verifyIdToken({
               idToken: req.body.idToken,
-              audience: "407408718192.apps.googleusercontent.com"
+              audience: process.env.CLIENT_ID
           });
           const payload = ticket.getPayload();
           const userid = payload['sub'];
