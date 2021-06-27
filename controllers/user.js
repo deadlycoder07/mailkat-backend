@@ -15,7 +15,7 @@ async function obtainTokenWithId(code){
 } ;
 exports.signUp = async(req, res, next)=>{
     // console.log(req.body);
-    var {username, password, email}=req.body;
+    var {username, password, email,name}=req.body;
     user=await Users.findOne({$or:[{username},{email:email}]});
     if(user!==null)
     {
@@ -28,7 +28,8 @@ exports.signUp = async(req, res, next)=>{
     newUser=await Users.create({
         username,
         password,
-        email
+        email,
+        name
     })
     console.log(newUser);
     var token = await newUser.generateAuthToken();
