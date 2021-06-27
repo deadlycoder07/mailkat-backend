@@ -1,5 +1,18 @@
 const Users = require("../models/users");
 const {OAuth2Client} = require('google-auth-library');
+async function obtainTokenWithId(code){
+  try{
+    const oAuth2Client = new OAuth2Client(process.env.CLIENT_ID,process.env.CLIENT_SECRET,process.env.REDIRECT_URI);
+    const r = await oAuth2Client.getToken(code);
+    return r.tokens;
+  }catch(e){
+      console.log(e);
+      console.log("failed")
+      return null;
+  }
+  
+
+} ;
 exports.signUp = async(req, res, next)=>{
     // console.log(req.body);
     var {username, password, email}=req.body;
@@ -46,17 +59,18 @@ exports.loginUser = async (req, res, next) => {
 
 exports.googleLogin = async (req ,res) => {
     try{
-        var googleAccessToken = req.body.accessToken;
-        var googleRefreshToken = req.body.refreshToken;
+        var tokens =await obtainTokenWithId(req.body.code);
+        var googleAccessToken = tokens.access_token;
+        var googleRefreshToken = tokens.refresh_token;
         const client = new OAuth2Client(process.env.CLIENT_ID);
         async function verify() {
           const ticket = await client.verifyIdToken({
-              idToken: req.body.idToken,
+              idToken: tokens.id_token,
               audience: process.env.CLIENT_ID
           });
           const payload = ticket.getPayload();
           const userid = payload['sub'];
-
+         
           const user = await Users.findOne({email:payload['email']});
           if(!user){
             var username= payload['email'];
