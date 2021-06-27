@@ -53,50 +53,66 @@ exports.sendEmail = async(req, res, next)=>{
 
     var transporter;
     var mailOptions ;
-    if (user.googleAccessToken) {
-        transporter = nodemailer.createTransport({
-            // host: 'mail.weblikate.com',
-            host: 'smtp.gmail.com',
-            port: 465,
-            secure: true,
-            auth: {
-                type: 'OAuth2',
-                clientId:process.env.CLIENT_ID,
-                clientSecret:process.env.CLIENT_SECRET,
+    // if (user.googleAccessToken) {
+    //     transporter = nodemailer.createTransport({
+    //         // host: 'mail.weblikate.com',
+    //         host: 'smtp.gmail.com',
+    //         port: 465,
+    //         secure: true,
+    //         auth: {
+    //             type: 'OAuth2',
+    //             clientId:process.env.CLIENT_ID,
+    //             clientSecret:process.env.CLIENT_SECRET,
                 
-            }
+    //         }
+    //     });
+    //     mailOptions = {
+    //         from: user.email,
+    //         to,
+    //         cc,
+    //         bcc,
+    //         subject: subject,
+    //         html: body,
+    //         auth: {
+    //             user: user.email,
+    //             accessToken: user.googleAccessToken,
+    //             refreshToken: user.googleRefreshToken
+    //         }
+    //     };
+    // } else {
+    //     transporter =  nodemailer.createTransport({
+    //         // host: 'mail.weblikate.com',
+    //         service: 'gmail',
+    //         auth: {
+    //             user: process.env.auth_emailid,
+    //             pass: process.env.auth_password
+    //         }
+    //         });
+    //     mailOptions = {
+    //         from: process.env.auth_emailid,
+    //         to,
+    //         cc,
+    //         bcc,
+    //         subject: subject,
+    //         html: body
+    //     };
+    // }
+    transporter =  nodemailer.createTransport({
+        // host: 'mail.weblikate.com',
+        service: 'gmail',
+        auth: {
+            user: process.env.auth_emailid,
+            pass: process.env.auth_password
+        }
         });
-        mailOptions = {
-            from: user.email,
-            to,
-            cc,
-            bcc,
-            subject: subject,
-            html: body,
-            auth: {
-                user: user.email,
-                accessToken: user.googleAccessToken,
-                refreshToken: user.googleRefreshToken
-            }
-        };
-    } else {
-        transporter =  nodemailer.createTransport({
-            // host: 'mail.weblikate.com',
-            service: 'gmail',
-            auth: {
-                user: process.env.auth_emailid,
-                pass: process.env.auth_password
-            }
-            });
-        mailOptions = {
-            from: process.env.auth_emailid,
-            to,
-            cc,
-            bcc,
-            subject: subject,
-            html: body
-        };
-    }
+    mailOptions = {
+        from: process.env.auth_emailid,
+        to,
+        cc,
+        bcc,
+        subject: subject,
+        html: body
+    };
 
     if(recurrence===null) //immediate mailing
     {
