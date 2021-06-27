@@ -97,7 +97,7 @@ exports.sendEmail = async(req, res, next)=>{
         const date = new Date(year, month, dayOfMonth, hour, minute, 0);
         console.log(date.toString());
         try {
-            const job = schedule.scheduleJob(date.toLocaleString(), async function(){
+            const job = schedule.scheduleJob(date, async function(){
                 transporter.sendMail(mailOptions, async function(error, info){
                     if (error) {
                         console.log(error);
@@ -348,3 +348,21 @@ exports.userCampaign  = async (req, res, next) => {
         next();
     }
 };
+
+exports.addEmail = async(req,res,next)=>{
+    user=await users.findOne(req.user)
+    {campaignName, to, cc, bcc}=req.body;
+    try {
+        Campaign=await campaignDetails.findOneAndUpdate({
+            campaignName
+        },{
+            $push:{
+                to:{$each:[to]},
+                cc:{$each:[cc]},
+                bcc:{$each:[bcc]},
+            }
+        })
+    } catch (error) {
+        
+    }
+}

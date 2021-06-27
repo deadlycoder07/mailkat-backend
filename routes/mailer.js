@@ -14,5 +14,6 @@ mailRouter.get('/scheduled',auth,mailController.mailScheduled);
 mailRouter.post('/campaign',auth,mailController.creatCampaign);
 mailRouter.get('/campaign',auth,mailController.getallCampaign);
 mailRouter.get('/campaignNames',auth,mailController.userCampaign);
+mailRouter.post('/addEmail',auth,mailController.addEmail);
 
 module.exports = mailRouter;
