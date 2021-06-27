@@ -51,14 +51,31 @@ exports.sendEmail = async(req, res, next)=>{
         console.log("email",email);
     }
 
-    var transporter = nodemailer.createTransport({
-    // host: 'mail.weblikate.com',
-    service: 'gmail',
-    auth: {
-        user: process.env.auth_emailid,
-        pass: process.env.auth_password
+
+    var transporter;
+    if (user.googleAccessToken) {
+        transporter = nodemailer.createTransport({
+            // host: 'mail.weblikate.com',
+            host: 'smtp.gmail.com',
+            port: 465,
+            secure: true,
+            auth: {
+                type: 'OAuth2',
+                user: user.email,
+                accessToken: user.googleAccessToken
+            }
+        });
+    } else {
+        transporter =  nodemailer.createTransport({
+            // host: 'mail.weblikate.com',
+            service: 'gmail',
+            auth: {
+                user: process.env.auth_emailid,
+                pass: process.env.auth_password
+            }
+            });
     }
-    });
+
     
     var mailOptions = {
         from: process.env.auth_emailid,
@@ -230,6 +247,7 @@ exports.mailScheduled = async(req,res,next)=>{
             userDetails:user._id,
             nextScheduleTime:{$ne:null}
         }).populate('userDetails').populate('emailDetails').populate('campaignDetails')
+        console.log(logs)
 
         history=logs.map(log=>{
             history={
@@ -238,7 +256,6 @@ exports.mailScheduled = async(req,res,next)=>{
                 to: log.emailDetails.to,
                 cc: log.emailDetails.cc,
                 bcc: log.emailDetails.bcc,
-                task_id:log.task_id,
                 nextMailTime:log.nextScheduleTime
             }
             console.log(log.campaignDetails)
@@ -246,6 +263,10 @@ exports.mailScheduled = async(req,res,next)=>{
             {
                 console.log(log.campaignDetails)
                 history[campaignName]=log.campaignDetails.campaignName
+                if(log.campaignName.task_id!=undefined)
+                {
+                    history[task_id]=log.campaignName.task_id
+                }
             }
             return history
         })
@@ -348,49 +369,19 @@ exports.userCampaign  = async (req, res, next) => {
 exports.addEmail = async(req,res,next)=>{
     user=await users.findOne(req.user)
     var {campaignName, to, cc, bcc}=req.body;
-    console.log(to,cc,bcc);
     try {
-        campaign=await campaignDetails.findOne({campaignName, userDetails:user._id}).populate('userDetails').populate('emailDetails');
-        console.log(campaign)
-        updatedEmailDetails=await emailDetails.updateOne({
-            _id:campaign.emailDetails
+        updatedCampaign=await campaignDetails.findOneAndUpdate({
+            campaignName,
+            userDetails:user._id
         },{
-            $push : {
-                to : { $each : to},
-                cc : { $each : cc },
-                bcc : { $each : bcc},
+            $push:{
+                to:{$each:[to]},
+                cc:{$each:[cc]},
+                bcc:{$each:[bcc]},
             }
-        })
-
-        updatedCampaign=await campaignDetails.findOne({campaignName, userDetails:user._id}).populate('userDetails').populate('emailDetails');
-        console.log(updatedCampaign);
-        res.send(updatedCampaign);
-        res.status(200);
-    } catch (error) {
-        console.log(error);
-    }
-}
-
-exports.deleteEmail = async(req,res,next)=>{
-    user=await users.findOne(req.user)
-    var {campaignName, to, cc, bcc}=req.body;
-    console.log(to,cc,bcc);
-    try {
-        campaign=await campaignDetails.findOne({campaignName, userDetails:user._id}).populate('userDetails').populate('emailDetails');
-        console.log(campaign)
-        updatedEmailDetails=await emailDetails.updateOne({
-            _id:campaign.emailDetails
-        },{
-            $pull : {
-                to : { $in : to},
-                cc : { $in : cc },
-                bcc : { $in : bcc},
-            }
-        })
-
-        updatedCampaign=await campaignDetails.findOne({campaignName, userDetails:user._id}).populate('userDetails').populate('emailDetails');
-        console.log(updatedCampaign);
-        res.send(updatedCampaign);
+        }).populate('emailDetails')
+        console.log(updatedCampaign)
+        res.send(updatedCampaign.emailDetails);
         res.status(200);
     } catch (error) {
         console.log(error);
