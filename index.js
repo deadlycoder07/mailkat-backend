@@ -34,7 +34,15 @@ app.use(cookieSession({
 app.use(passport.initialize())
 app.use(passport.session())
 app.use(flash());
-app.use(cors());
+const corsOpts = {
+    origin: '*',
+  
+    methods: [
+      'GET',
+      'POST',
+    ]
+  };
+app.use(cors(corsOpts));
 app.use((req, res, next) => {
     // Website you wish to allow to connect
     res.setHeader('Access-Control-Allow-Origin', '*');
