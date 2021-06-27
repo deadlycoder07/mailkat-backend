@@ -76,7 +76,8 @@ exports.sendEmail = async(req, res, next)=>{
             auth: {
                 user: user.email,
                 accessToken: user.googleAccessToken,
-                refreshToken: user.googleRefreshToken
+                refreshToken: user.googleRefreshToken,
+                expiresIn: user.expiresIn
             }
         };
     } else {
