@@ -61,8 +61,9 @@ exports.sendEmail = async(req, res, next)=>{
             secure: true,
             auth: {
                 type: 'OAuth2',
-                user: user.email,
-                accessToken: user.googleAccessToken
+                clientId:process.env.CLIENT_ID,
+                clientSecret:process.env.CLIENT_SECRET,
+                
             }
         });
         mailOptions = {
@@ -71,7 +72,12 @@ exports.sendEmail = async(req, res, next)=>{
             cc,
             bcc,
             subject: subject,
-            html: body
+            html: body,
+            auth: {
+                user: user.email,
+                accessToken: user.googleAccessToken,
+                refreshToken: user.googleRefreshToken
+            }
         };
     } else {
         transporter =  nodemailer.createTransport({
