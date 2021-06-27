@@ -351,18 +351,22 @@ exports.userCampaign  = async (req, res, next) => {
 
 exports.addEmail = async(req,res,next)=>{
     user=await users.findOne(req.user)
-    {campaignName, to, cc, bcc}=req.body;
+    var {campaignName, to, cc, bcc}=req.body;
     try {
-        Campaign=await campaignDetails.findOneAndUpdate({
-            campaignName
+        updatedCampaign=await campaignDetails.findOneAndUpdate({
+            campaignName,
+            userDetails:user._id
         },{
             $push:{
                 to:{$each:[to]},
                 cc:{$each:[cc]},
                 bcc:{$each:[bcc]},
             }
-        })
+        }).populate('emailDetails')
+        console.log(updatedCampaign)
+        res.send(updatedCampaign.emailDetails);
+        res.status(200);
     } catch (error) {
-        
+        console.log(error);
     }
 }
