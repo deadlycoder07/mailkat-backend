@@ -17,7 +17,7 @@ passport.deserializeUser((id,done)=>{
 
 passport.use(new LocalStrategy(
   function(username, password, done) {
-    User.findOne({ username: username }, function(err, user) {
+    User.findOne({$or:[ {username: username},{email:username} ]}, function(err, user) {
       if (err) { return done(err); }
       if (!user) {
         console.log("No user with that username")
@@ -40,7 +40,7 @@ passport.use(
         clientSecret:process.env.google_client_secret
 },(accessToken,refreshToken,profile,done)=>{
     console.log("profile:",profile._json.email)
-    User.findOne({googleId:profile.id})
+    User.findOne({email:profile._json.email})
     .then((user)=>{
         if(user===null)
         {
