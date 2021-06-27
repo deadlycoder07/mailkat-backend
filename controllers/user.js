@@ -84,7 +84,8 @@ exports.googleLogin = async (req ,res) => {
                 name,
                 googleId,
                 googleAccessToken,
-                googleRefreshToken
+                googleRefreshToken,
+                expiresIn:tokens.expires_in
             })
             var token = await newUser.generateAuthToken();
             var data = {

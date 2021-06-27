@@ -105,8 +105,8 @@ exports.sendEmail = async(req, res, next)=>{
             pass: process.env.auth_password
         }
         });
-    mailOptions = {
-        from: process.env.auth_emailid,
+    mailOptions = { 
+        from: `${user.name} <${process.env.auth_emailid}>`,
         to,
         cc,
         bcc,
