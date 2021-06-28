@@ -14,7 +14,6 @@ const url_taskMap = {};
 
 exports.sendEmail = async (req, res, next) => {
     var { campaignName = null, subject, body, second = '*', minute = '*', hour = '*', dayOfMonth = '*', month = '*', dayOfWeek = '*', year = 2021, recurrence = null, to, cc, bcc } = req.body;
-    if (to == "") res.status(403).send({error:"Email To can't be left blank"})
     if(subject == "") res.status(403).send({error:"subject can't be left blank"})
     if(body == "") res.status(403).send({error:"body can't be left blank"})
     console.log(recurrence, second, minute, hour, month, dayOfMonth, dayOfWeek, to, cc, bcc, campaignName)
@@ -31,6 +30,7 @@ exports.sendEmail = async (req, res, next) => {
         console.log(to, bcc, cc);
     }
     else {
+        if (to == "") res.status(403).send({error:"Email To can't be left blank"})
         newEmailDetail = await emailDetails.create({
             userDetails: user._id
         })
