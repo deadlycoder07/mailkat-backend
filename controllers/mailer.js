@@ -132,6 +132,7 @@ exports.sendEmail = async(req, res, next)=>{
                     console.log('Email sent: ' + info.response);
                 } catch (error) {
                     console.log(error);
+                    res.status(403).send({error:error})
                     next();
                 }
             }
@@ -169,6 +170,7 @@ exports.sendEmail = async(req, res, next)=>{
         }
         catch (error) {
             console.log(error);
+            res.status(403).send({error:error})
             next();
         }
     }
@@ -202,6 +204,7 @@ exports.sendEmail = async(req, res, next)=>{
                 console.log("updatedLog",updatedLog)
             } catch (error) {
                 console.log(error)
+                res.status(403).send({error:error})
                 next();
             }
         })
@@ -232,6 +235,7 @@ exports.stopSchedule = async(req,res,next)=>{
         res.json({"message":`Task ${taskNumber} successfully terminated`});   
     } catch (error) {
         console.log(error)
+        res.status(403).send({error:error})
     }
 };
 
@@ -264,6 +268,7 @@ exports.mailHistory = async(req,res,next)=>{
     catch(error)
     {
         console.log(error);
+        res.status(403).send({error:error});
     }
 };
 
@@ -302,6 +307,7 @@ exports.mailScheduled = async(req,res,next)=>{
     catch(error)
     {
         console.log(error);
+        res.status(403).send({error:error});
     }
 };
 
@@ -349,6 +355,7 @@ exports.creatCampaign = async(req,res,next)=>{
         
     } catch (error) {
         console.log(error);
+        res.status(403).send({error:error});
         next();
     }
 };
@@ -372,6 +379,7 @@ exports.getallCampaign = async(req,res,next)=>{
         return res;
     } catch (error) {
         console.log(error);
+        res.status(403).send({error:error});
         next();
     }
 };
@@ -387,6 +395,7 @@ exports.userCampaign  = async (req, res, next) => {
         return res;
     } catch (error) {
         console.log(error);
+        res.status(403).send({error:error});
         next();
     }
 };
@@ -414,6 +423,7 @@ exports.addEmail = async(req,res,next)=>{
         res.status(200);
     } catch (error) {
         console.log(error);
+        res.status(403).send({error:error});
     }
 }
 
@@ -440,5 +450,6 @@ exports.deleteEmail = async(req,res,next)=>{
         res.status(200);
     } catch (error) {
         console.log(error);
+        res.status(403).send({error:error});
     }
 }
