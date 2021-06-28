@@ -8,6 +8,7 @@ const users = require('../models/users');
 const parser = require('cron-parser');
 const schedule = require('node-schedule');
 const emailDetails = require('../models/emailDetails');
+const e = require('express');
 
 const url_taskMap = {};
 
@@ -314,10 +315,8 @@ exports.mailScheduled = async(req,res,next)=>{
 exports.creatCampaign = async(req,res,next)=>{
     // console.log(req.body)
     var {campaignName, to, cc, bcc}=req.body;
-    if(campaignName === "") throw new Error("Campaign name can't be left blank");
-    if(to === "") throw new Error("EmailTo can't be left blank");
-    if(cc === "") throw new Error("cc can't be left blank");
-    if(bcc === "") throw new Error("bcc can't be left blank");
+    if(campaignName == "") throw new Error("Campaign name can't be left blank");
+    if(to == "") throw new Error("EmailTo can't be left blank");
     console.log(to,campaignName, cc, bcc);
 
     user=await users.findOne(req.user)
@@ -331,7 +330,7 @@ exports.creatCampaign = async(req,res,next)=>{
         if(foundCampaign)
         {
             res.status(402)
-            res.json({"message":`You have already used that campaign name!. Choose another one!`})
+            res.json({"merror":`You have already used that campaign name!. Choose another one!`})
             return
         }
 
@@ -353,13 +352,13 @@ exports.creatCampaign = async(req,res,next)=>{
             emailDetails:newEmailDetail._id
         });
 
-        res.status(201);
+        res.status(200);
         res.json({"message":"Campaign created!"});
         return res;
         
     } catch (error) {
         console.log(error);
-        res.status(403).send({error:"failed to create campaign please try again later"})
+        res.status(403).send({error:e.message})
         next();
     }
 };
