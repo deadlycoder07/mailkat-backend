@@ -23,8 +23,7 @@ var UserSchema = new Schema({
     },
     password: {
         type: String,
-        default: '',
-        required: [true,'password is required']
+        default: ''
     },
     name: {
         type: String,
