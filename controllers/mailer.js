@@ -128,17 +128,17 @@ exports.sendEmail = async(req, res, next)=>{
                     })
                     console.log("added to log", newLog)
                     res.status(200);
-                    res.json({"message":"mail sent"});
+                    res.json({"message":"mail sent successfully"});
                     console.log('Email sent: ' + info.response);
                 } catch (error) {
                     console.log(error);
-                    res.status(403).send({error:error})
+                    res.status(403).send({error:"we are facing issue in sending your email"})
                     next();
                 }
             }
         });
     }
-    else if(recurrence==="Once") //problematic
+    else if(recurrence==="Once") 
     {
         console.log("Printing once")
         const date = new Date(year, month, dayOfMonth, hour, minute, 0);
@@ -166,11 +166,11 @@ exports.sendEmail = async(req, res, next)=>{
                 recurrence, subject, body, campaignDetails:campaignId, emailDetails: emailDetailId, userDetails:user._id, nextScheduleTime:date
             })
             res.status(200)
-            res.json({"message":"Scheduled"})
+            res.json({"message":"Scheduled your mail successfully"})
         }
         catch (error) {
             console.log(error);
-            res.status(403).send({error:error})
+            res.status(403).send({error:"we are facing issue in sending your email"})
             next();
         }
     }
@@ -204,13 +204,13 @@ exports.sendEmail = async(req, res, next)=>{
                 console.log("updatedLog",updatedLog)
             } catch (error) {
                 console.log(error)
-                res.status(403).send({error:error})
+                res.status(403).send({error:"we are facing issue in sending your email"})
                 next();
             }
         })
         const idx=Object.keys(url_taskMap).length
         console.log(idx)
-        res.json({id:idx, "message":"mail scheduled"})
+        res.json({id:idx, "message":"mail scheduled successfully"})
         url_taskMap[idx] = task;
         
         const interval = parser.parseExpression(cron_schedule_string);
@@ -235,7 +235,7 @@ exports.stopSchedule = async(req,res,next)=>{
         res.json({"message":`Task ${taskNumber} successfully terminated`});   
     } catch (error) {
         console.log(error)
-        res.status(403).send({error:error})
+        res.status(403).send({error:error.message})
     }
 };
 
@@ -268,7 +268,7 @@ exports.mailHistory = async(req,res,next)=>{
     catch(error)
     {
         console.log(error);
-        res.status(403).send({error:error});
+        res.status(403).send({error:error.message})
     }
 };
 
@@ -307,13 +307,17 @@ exports.mailScheduled = async(req,res,next)=>{
     catch(error)
     {
         console.log(error);
-        res.status(403).send({error:error});
+        res.status(403).send({error:error.message})
     }
 };
 
 exports.creatCampaign = async(req,res,next)=>{
     // console.log(req.body)
     var {campaignName, to, cc, bcc}=req.body;
+    if(campaignName === "") throw new Error("Campaign name can't be left blank");
+    if(to === "") throw new Error("EmailTo can't be left blank");
+    if(cc === "") throw new Error("cc can't be left blank");
+    if(bcc === "") throw new Error("bcc can't be left blank");
     console.log(to,campaignName, cc, bcc);
 
     user=await users.findOne(req.user)
@@ -355,7 +359,7 @@ exports.creatCampaign = async(req,res,next)=>{
         
     } catch (error) {
         console.log(error);
-        res.status(403).send({error:error});
+        res.status(403).send({error:"failed to create campaign please try again later"})
         next();
     }
 };
@@ -379,7 +383,7 @@ exports.getallCampaign = async(req,res,next)=>{
         return res;
     } catch (error) {
         console.log(error);
-        res.status(403).send({error:error});
+        res.status(403).send({error:"failed to fetch your campaigns please try again later"})
         next();
     }
 };
@@ -395,7 +399,7 @@ exports.userCampaign  = async (req, res, next) => {
         return res;
     } catch (error) {
         console.log(error);
-        res.status(403).send({error:error});
+        res.status(403).send({error:"failed to fetch campaigns please try again later"});
         next();
     }
 };
@@ -423,7 +427,7 @@ exports.addEmail = async(req,res,next)=>{
         res.status(200);
     } catch (error) {
         console.log(error);
-        res.status(403).send({error:error});
+        res.status(403).send({error:error.message})
     }
 }
 
@@ -450,6 +454,6 @@ exports.deleteEmail = async(req,res,next)=>{
         res.status(200);
     } catch (error) {
         console.log(error);
-        res.status(403).send({error:error});
+        res.status(403).send({error:error.message})
     }
 }
