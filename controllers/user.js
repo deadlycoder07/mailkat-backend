@@ -19,6 +19,7 @@ exports.signUp = async (req, res, next) => {
         var { username, password, email, name } = req.body;
         if (username == "") throw new Error("username can't be blank");
         if (password == "") throw new Error("password can't be blank");
+        if (name == "") throw new Error("Name can't be blank");
         user = await Users.findOne({ $or: [{ username }, { email: email }] });
         if (user !== null) {
             console.log("Already exists");
@@ -59,7 +60,7 @@ exports.loginUser = async (req, res, next) => {
         }
         res.status(200).send(data);
     } catch (e) {
-        res.status(400).send({ error: e });
+        res.status(400).send({ error: e.message });
     }
 };
 
