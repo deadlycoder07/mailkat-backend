@@ -330,7 +330,7 @@ exports.creatCampaign = async(req,res,next)=>{
         if(foundCampaign)
         {
             res.status(402)
-            res.json({"merror":`You have already used that campaign name!. Choose another one!`})
+            res.json({"error":`You have already used that campaign name!. Choose another one!`})
             return
         }
 
