@@ -145,10 +145,7 @@ exports.sendEmail = async (req, res, next) => {
         const date = new Date(year, month, dayOfMonth, hour, minute, 0);
         console.log(date.toString());
         try {
-            const idx = Object.keys(url_taskMap).length
-            console.log(idx)
-            url_taskMap[idx] = {"Once":"Scheduled"};
-            const job = schedule.scheduleJob(idx, date, async function () {
+            const job = schedule.scheduleJob(date, async function () {
                 transporter.sendMail(mailOptions, async function (error, info) {
                     if (error) {
                         console.log(error);
@@ -166,11 +163,20 @@ exports.sendEmail = async (req, res, next) => {
                 }
                 )
             })
+            const idx = Object.keys(url_taskMap).length
+            console.log("idx",idx)
+            url_taskMap[idx] = job;
+            console.log(url_taskMap[idx]);
+            if("cancel" in url_taskMap[idx])
+            {
+                console.log("cncl is a key");
+            }
+
             newLog = await emailLogs.create({
                 recurrence, subject, body, campaignDetails: campaignId, emailDetails: emailDetailId, userDetails: user._id, nextScheduleTime: date, task_id: idx
             })
             res.status(200)
-            res.json({ "message": "Scheduled your mail successfully" })
+            res.json({ "task_id":idx,"message": "Scheduled your mail successfully" })
         }
         catch (error) {
             console.log(error);
@@ -232,12 +238,15 @@ exports.sendEmail = async (req, res, next) => {
 exports.stopSchedule = async (req, res, next) => {
     const { taskNumber } = req.query
     console.log(taskNumber, url_taskMap[taskNumber])
-    if("Once" in url_taskMap[taskNumber])
+    if("cancel" in url_taskMap[taskNumber])
     {
-        schedule.scheduledJobs[taskNumber].cancel();
+        console.log("Once");
+        url_taskMap[taskNumber].cancel();
     }
     else
-    url_taskMap[taskNumber].stop();
+    {
+        url_taskMap[taskNumber].stop();
+    }
     try {
         updatedLog = await emailLogs.findOneAndUpdate({ task_id: taskNumber }, { nextScheduleTime: null })
         console.log("after stop", updatedLog)
@@ -262,6 +271,7 @@ exports.mailHistory = async (req, res, next) => {
                 to: log.emailDetails.to,
                 cc: log.emailDetails.cc,
                 bcc: log.emailDetails.bcc,
+                body:log.body,
                 lastSent: log.lastSent
             }
             if (log.campaignDetails != null) {
@@ -297,6 +307,7 @@ exports.mailScheduled = async (req, res, next) => {
                 to: log.emailDetails.to,
                 cc: log.emailDetails.cc,
                 bcc: log.emailDetails.bcc,
+                body: log.body,
                 task_id: log.task_id,
                 nextMailTime: log.nextScheduleTime
             }
