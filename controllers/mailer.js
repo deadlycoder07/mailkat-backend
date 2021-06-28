@@ -145,7 +145,10 @@ exports.sendEmail = async (req, res, next) => {
         const date = new Date(year, month, dayOfMonth, hour, minute, 0);
         console.log(date.toString());
         try {
-            const job = schedule.scheduleJob(date, async function () {
+            const idx = Object.keys(url_taskMap).length
+            console.log(idx)
+            url_taskMap[idx] = {"Once":"Scheduled"};
+            const job = schedule.scheduleJob(idx, date, async function () {
                 transporter.sendMail(mailOptions, async function (error, info) {
                     if (error) {
                         console.log(error);
@@ -164,7 +167,7 @@ exports.sendEmail = async (req, res, next) => {
                 )
             })
             newLog = await emailLogs.create({
-                recurrence, subject, body, campaignDetails: campaignId, emailDetails: emailDetailId, userDetails: user._id, nextScheduleTime: date
+                recurrence, subject, body, campaignDetails: campaignId, emailDetails: emailDetailId, userDetails: user._id, nextScheduleTime: date, task_id: idx
             })
             res.status(200)
             res.json({ "message": "Scheduled your mail successfully" })
@@ -229,6 +232,11 @@ exports.sendEmail = async (req, res, next) => {
 exports.stopSchedule = async (req, res, next) => {
     const { taskNumber } = req.query
     console.log(taskNumber, url_taskMap[taskNumber])
+    if("Once" in url_taskMap[taskNumber])
+    {
+        schedule.scheduledJobs[taskNumber].cancel();
+    }
+    else
     url_taskMap[taskNumber].stop();
     try {
         updatedLog = await emailLogs.findOneAndUpdate({ task_id: taskNumber }, { nextScheduleTime: null })
