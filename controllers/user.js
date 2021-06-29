@@ -47,7 +47,7 @@ exports.signUp = async (req, res, next) => {
 
 exports.loginUser = async (req, res, next) => {
     try {
-        if (username == "") throw new Error("username can't be blank");
+        if (req.body.username === "") throw new Error("username can't be blank");
         const user = await Users.findByCredentials(req.body.username, req.body.password);
         const token = await user.generateAuthToken();
         var data = {
