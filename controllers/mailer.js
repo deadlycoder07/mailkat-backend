@@ -472,3 +472,26 @@ exports.deleteEmail = async (req, res, next) => {
         res.status(403).send({ error: error.message })
     }
 }
+exports.updateCampaign = async(req,res) => {
+    const user = req.user;
+    var { campaignName, to, cc, bcc } = req.body;
+    if(to == "")  return res.status(403).send({error: "Email to can't be left blank"});
+    try{
+        var campaign = await campaignDetails.findOne({campaignName,userDetails: user._id}).populate('userDetails').populate('emailDetails');
+        eDetails = await emailDetails.updateOne(
+            {
+                _id:campaign.emailDetails
+            },
+            {
+                $set:{
+                    to: to,
+                    cc: cc,
+                    bcc: bcc
+                }
+            }
+        );
+        return res.status(200).send({message:"campaign updated successfully"});
+    }catch(error){
+        return res.status(403).send({error:"Failed to update please try again later"});
+    }
+}

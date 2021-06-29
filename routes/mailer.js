@@ -16,5 +16,6 @@ mailRouter.get('/campaign',auth,mailController.getallCampaign);
 mailRouter.get('/campaignNames',auth,mailController.userCampaign);
 mailRouter.post('/addEmail',auth,mailController.addEmail);
 mailRouter.post('/deleteEmail',auth,mailController.deleteEmail);
+mailRouter.post('/updateCampaign',auth,mailController.updateCampaign);
 
 module.exports = mailRouter;
