@@ -71,10 +71,18 @@ UserSchema.methods.generateAuthToken = async function () {
     return token;
 };
 
-UserSchema.statics.findByCredentials = async (username, password) => {
-    const user = await User.findOne({
-        username:username,
-    });
+UserSchema.statics.findByCredentials = async (username,password) => {
+    var user;
+    if(!validator.isEmail(username)){
+     user = await User.findOne({
+            username:username,
+        });
+    }else{
+        user = await User.findOne({
+            email:username,
+        });
+    }
+  
 
     if (!user) {
         throw new Error('User does not found, Please Register');
