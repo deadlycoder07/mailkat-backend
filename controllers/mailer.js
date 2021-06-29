@@ -14,8 +14,8 @@ const url_taskMap = {};
 
 exports.sendEmail = async (req, res, next) => {
     var { campaignName = null, subject, body, second = '*', minute = '*', hour = '*', dayOfMonth = '*', month = '*', dayOfWeek = '*', year = 2021, recurrence = null, to, cc, bcc } = req.body;
-    if(subject == "") res.status(403).send({error:"subject can't be left blank"})
-    if(body == "") res.status(403).send({error:"body can't be left blank"})
+    if(subject == "") return res.status(403).send({error:"subject can't be left blank"})
+    if(body == "") return res.status(403).send({error:"body can't be left blank"})
     console.log(recurrence, second, minute, hour, month, dayOfMonth, dayOfWeek, to, cc, bcc, campaignName)
     user = await users.findOne(req.user);
     if (campaignName !== null) {
@@ -30,7 +30,7 @@ exports.sendEmail = async (req, res, next) => {
         console.log(to, bcc, cc);
     }
     else {
-        if (to == "") res.status(403).send({error:"Email To can't be left blank"})
+        if (to == "") return res.status(403).send({error:"Email To can't be left blank"})
         newEmailDetail = await emailDetails.create({
             userDetails: user._id
         })
@@ -163,11 +163,20 @@ exports.sendEmail = async (req, res, next) => {
                 }
                 )
             })
+            const idx = Object.keys(url_taskMap).length
+            console.log("idx",idx)
+            url_taskMap[idx] = job;
+            console.log(url_taskMap[idx]);
+            if("cancel" in url_taskMap[idx])
+            {
+                console.log("cncl is a key");
+            }
+
             newLog = await emailLogs.create({
-                recurrence, subject, body, campaignDetails: campaignId, emailDetails: emailDetailId, userDetails: user._id, nextScheduleTime: date
+                recurrence, subject, body, campaignDetails: campaignId, emailDetails: emailDetailId, userDetails: user._id, nextScheduleTime: date, task_id: idx
             })
             res.status(200)
-            res.json({ "message": "Scheduled your mail successfully" })
+            res.json({ "task_id":idx,"message": "Scheduled your mail successfully" })
         }
         catch (error) {
             console.log(error);
@@ -229,7 +238,15 @@ exports.sendEmail = async (req, res, next) => {
 exports.stopSchedule = async (req, res, next) => {
     const { taskNumber } = req.query
     console.log(taskNumber, url_taskMap[taskNumber])
-    url_taskMap[taskNumber].stop();
+    if("cancel" in url_taskMap[taskNumber])
+    {
+        console.log("Once");
+        url_taskMap[taskNumber].cancel();
+    }
+    else
+    {
+        url_taskMap[taskNumber].stop();
+    }
     try {
         updatedLog = await emailLogs.findOneAndUpdate({ task_id: taskNumber }, { nextScheduleTime: null })
         console.log("after stop", updatedLog)
@@ -254,6 +271,7 @@ exports.mailHistory = async (req, res, next) => {
                 to: log.emailDetails.to,
                 cc: log.emailDetails.cc,
                 bcc: log.emailDetails.bcc,
+                body:log.body,
                 lastSent: log.lastSent
             }
             if (log.campaignDetails != null) {
@@ -289,6 +307,7 @@ exports.mailScheduled = async (req, res, next) => {
                 to: log.emailDetails.to,
                 cc: log.emailDetails.cc,
                 bcc: log.emailDetails.bcc,
+                body: log.body,
                 task_id: log.task_id,
                 nextMailTime: log.nextScheduleTime
             }
